@@ -37,7 +37,7 @@ export default function TrendingPage() {
 
   const filtered = useMemo(() => {
     const parsedMin = Number(minScore) || 0;
-    return items.filter((item) => (item.score ?? Number.NEGATIVE_INFINITY) >= parsedMin);
+    return items.filter((item) => !item.isGraduated && (item.score ?? Number.NEGATIVE_INFINITY) >= parsedMin);
   }, [items, minScore]);
 
   const topThree = filtered.slice(0, 3);
