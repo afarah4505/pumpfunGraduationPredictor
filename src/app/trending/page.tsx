@@ -93,7 +93,9 @@ export default function TrendingPage() {
                     <div className="mt-3 flex items-center justify-between">
                       <Badge
                         variant={
-                          token.score === null
+                          token.isGraduated
+                            ? "success"
+                            : token.score === null
                             ? "warning"
                             : token.score >= 61
                               ? "success"
@@ -102,7 +104,7 @@ export default function TrendingPage() {
                                 : "danger"
                         }
                       >
-                        {token.score === null ? "N/A" : `${token.score}%`}
+                        {token.isGraduated ? "Graduated" : token.score === null ? "N/A" : `${token.score}%`}
                       </Badge>
                       <Link href={`/token/${token.address}`} className="inline-flex text-primary hover:underline">
                         Open
@@ -127,7 +129,9 @@ export default function TrendingPage() {
                   <div className="flex items-center gap-2">
                     <Badge
                       variant={
-                        token.score === null
+                        token.isGraduated
+                          ? "success"
+                          : token.score === null
                           ? "warning"
                           : token.score >= 61
                             ? "success"
@@ -136,7 +140,7 @@ export default function TrendingPage() {
                               : "danger"
                       }
                     >
-                      {token.score === null ? "N/A" : `${token.score}%`}
+                      {token.isGraduated ? "Graduated" : token.score === null ? "N/A" : `${token.score}%`}
                     </Badge>
                     <Link href={`/token/${token.address}`} className="inline-flex text-primary hover:underline">
                       View
