@@ -260,7 +260,7 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
             onChange={(event) => setAddress(event.target.value)}
             placeholder="Enter Pump.fun token address"
           />
-          <Button disabled={loading || !address.trim()} onClick={analyzeToken}>
+          <Button disabled={loading || !address.trim()} onClick={() => void analyzeToken()}>
             {loading ? "Analyzing..." : "Analyze"}
           </Button>
         </div>
