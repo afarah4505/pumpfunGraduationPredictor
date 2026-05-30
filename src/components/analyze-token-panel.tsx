@@ -13,6 +13,7 @@ import { MetricCard } from "@/components/ui/metric-card";
 import { Progress } from "@/components/ui/progress";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { Skeleton } from "@/components/ui/skeleton";
+import { appendScoreSnapshot } from "@/lib/score-history-client";
 
 type WatchlistItem = {
   id: string;
@@ -221,6 +222,7 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
       }
 
       setResult(json.data);
+      appendScoreSnapshot(json.data.address, json.data.score);
       setWarning(json.warning ?? null);
       setWarningDetails(json.details ?? []);
     } catch (analysisError) {

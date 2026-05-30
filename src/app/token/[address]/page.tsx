@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Activity, BadgeDollarSign, PieChart, Wallet } from "lucide-react";
 import { GrowthTrendChart } from "@/components/charts/growth-trend-chart";
-import { ScoreHistoryChart } from "@/components/charts/score-history-chart";
+import { ScoreHistoryClient } from "@/components/charts/score-history-client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { MetricCard } from "@/components/ui/metric-card";
@@ -73,7 +73,7 @@ export default async function TokenDetailPage({ params }: TokenPageProps) {
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="space-y-3">
           <CardTitle>Score History</CardTitle>
-          <ScoreHistoryChart data={token.scoreHistory} />
+          <ScoreHistoryClient address={token.address} score={token.score} />
         </Card>
 
         <Card className="space-y-3">
