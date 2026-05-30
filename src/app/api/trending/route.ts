@@ -43,6 +43,7 @@ export async function GET(request: Request) {
   const targetAddresses = (pumpfunPreferred.length > 0 ? pumpfunPreferred : liveAddresses).slice(0, 12);
 
   const data = await Promise.all(targetAddresses.map((address) => buildTokenAnalysis(address)));
+  const opportunities = data.filter((token) => !token.isGraduated && (token.score ?? Number.NEGATIVE_INFINITY) >= 31);
 
-  return NextResponse.json({ data: sortTokens(data, parsed.data.sortBy) });
+  return NextResponse.json({ data: sortTokens(opportunities, parsed.data.sortBy) });
 }

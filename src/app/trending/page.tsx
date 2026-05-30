@@ -21,7 +21,7 @@ export default function TrendingPage() {
   const [items, setItems] = useState<TokenAnalysis[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<TrendingSortBy>("score");
-  const [minScore, setMinScore] = useState("0");
+  const [minScore, setMinScore] = useState("31");
 
   useEffect(() => {
     async function loadTrending() {
