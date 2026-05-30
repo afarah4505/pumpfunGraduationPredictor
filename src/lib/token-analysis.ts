@@ -138,9 +138,10 @@ export async function buildTokenAnalysis(address: string): Promise<TokenAnalysis
     fetchPumpfunCoin(normalizedAddress),
     fetchPrimarySolanaPair(normalizedAddress),
   ]);
-  const isRaydiumPair = (primaryDexPair?.dexId ?? "").toLowerCase().includes("raydium");
+  const primaryDexId = (primaryDexPair?.dexId ?? "").toLowerCase();
+  const isMigratedDexPair = primaryDexId.length > 0 && primaryDexId !== "pumpfun";
   const hasPumpfunRaydiumPool = typeof pumpfunCoin?.raydium_pool === "string" && pumpfunCoin.raydium_pool.length > 0;
-  const isGraduated = pumpfunCoin?.complete === true || hasPumpfunRaydiumPool || isRaydiumPair;
+  const isGraduated = pumpfunCoin?.complete === true || hasPumpfunRaydiumPool || isMigratedDexPair;
   const missingMetrics = getMissingMetricsBundle(metrics);
   const scoreInput = buildScoreInput(metrics);
   const availability = getAvailabilityCount(metrics);
