@@ -1,49 +1,60 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { fetchPrimarySolanaPair, fetchTrendingAddresses } from "@/lib/dexscreener";
-import { buildTokenAnalysis } from "@/lib/token-analysis";
-import type { TokenAnalysis, TrendingSortBy } from "@/lib/types";
+import { fetchTrendingOpportunitiesFromDb } from "@/lib/supabase/tokens";
 
-const querySchema = z.object({
-  sortBy: z
-    .enum(["score", "holderGrowthRate", "buySellRatio", "volumeGrowthRate", "uniqueWalletCount"])
-    .default("score"),
-});
+export const dynamic = "force-dynamic";
 
-function sortTokens(tokens: TokenAnalysis[], sortBy: TrendingSortBy) {
-  return [...tokens].sort((a, b) => {
-    const aValue = a[sortBy] ?? Number.NEGATIVE_INFINITY;
-    const bValue = b[sortBy] ?? Number.NEGATIVE_INFINITY;
-    return bValue - aValue;
-  });
+type Conviction = "High Conviction" | "Medium Conviction";
+
+type RankedOpportunity = {
+  rank: number;
+  address: string;
+  name: string;
+  symbol: string;
+  score: number;
+  confidence: "Low" | "Medium" | "High";
+  conviction: Conviction;
+};
+
+function toConviction(score: number): Conviction {
+  return score >= 80 ? "High Conviction" : "Medium Conviction";
 }
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const parsed = querySchema.safeParse({
-    sortBy: url.searchParams.get("sortBy") ?? "score",
-  });
+export async function GET() {
+  const rows = await fetchTrendingOpportunitiesFromDb();
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid sort option" }, { status: 400 });
-  }
+  const ranked: RankedOpportunity[] = rows
+    .filter((token) => token.score >= 60)
+    .sort((a, b) => b.score - a.score)
+    .map((token, index) => {
+      const rankedToken: RankedOpportunity = {
+        rank: index + 1,
+        address: token.address,
+        name: token.name,
+        symbol: token.symbol,
+        score: token.score,
+        confidence: token.confidence,
+        conviction: toConviction(token.score),
+      };
 
-  const liveAddresses = await fetchTrendingAddresses(30);
+      console.info("[api:trending] rank", {
+        token: `${rankedToken.symbol} (${rankedToken.address})`,
+        score: rankedToken.score,
+        confidence: rankedToken.confidence,
+        rankingPosition: rankedToken.rank,
+      });
 
-  if (liveAddresses.length === 0) {
-    return NextResponse.json({ data: [], message: "No live trending tokens available right now" });
-  }
+      return rankedToken;
+    });
 
-  const primaryPairs = await Promise.all(liveAddresses.map((address) => fetchPrimarySolanaPair(address)));
-  const pumpfunPreferred = liveAddresses.filter((_, index) => {
-    const dexId = (primaryPairs[index]?.dexId ?? "").toLowerCase();
-    return dexId === "pumpfun";
-  });
-
-  const targetAddresses = (pumpfunPreferred.length > 0 ? pumpfunPreferred : liveAddresses).slice(0, 12);
-
-  const data = await Promise.all(targetAddresses.map((address) => buildTokenAnalysis(address)));
-  const opportunities = data.filter((token) => !token.isGraduated);
-
-  return NextResponse.json({ data: sortTokens(opportunities, parsed.data.sortBy) });
+  return NextResponse.json(
+    {
+      data: ranked,
+      generatedAt: new Date().toISOString(),
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    },
+  );
 }

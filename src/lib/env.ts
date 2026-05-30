@@ -11,6 +11,7 @@ const serverEnvSchema = z.object({
   SOLANA_RPC_URL: z.string().url().optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 });
 
 const defaultEnv = {
@@ -38,6 +39,7 @@ export function getServerEnv() {
     SOLANA_RPC_URL: process.env.SOLANA_RPC_URL ?? defaultEnv.SOLANA_RPC_URL,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   });
 
   cachedServerEnv = parsed;

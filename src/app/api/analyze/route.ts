@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { buildTokenAnalysis } from "@/lib/token-analysis";
 import { isValidSolanaMintAddress, validateOnChainMintAddress } from "@/lib/solana-validation";
+import { upsertAnalyzedToken } from "@/lib/supabase/tokens";
 
 const schema = z.object({
   address: z.string().min(20),
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
     }
 
     const data = await buildTokenAnalysis(parsed.data.address);
+    await upsertAnalyzedToken(data);
 
     if (!data.name && !data.symbol) {
       console.error("[api:analyze] token-metadata-not-found", {
