@@ -72,6 +72,7 @@ export type ScoreResult = {
 
 export type TokenAnalysis = {
   address: string;
+  isGraduated: boolean;
   name: string | null;
   symbol: string | null;
   marketCap: number | null;

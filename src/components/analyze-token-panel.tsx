@@ -22,6 +22,7 @@ type WatchlistItem = {
     address: string;
     name: string;
     score: number | null;
+    isGraduated?: boolean;
   };
 };
 
@@ -220,6 +221,7 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
           address: result.address,
           name: result.name ?? result.symbol ?? result.address,
           score: result.score,
+          isGraduated: result.isGraduated,
         },
       };
 
@@ -330,9 +332,11 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
               <div className="mt-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted">Graduation Probability</span>
-                  <span className="font-semibold text-foreground">{result.score === null ? "Unknown" : `${result.score}%`}</span>
+                  <span className="font-semibold text-foreground">
+                    {result.isGraduated ? "Graduated" : result.score === null ? "Unknown" : `${result.score}%`}
+                  </span>
                 </div>
-                <Progress value={result.score ?? 0} />
+                <Progress value={result.isGraduated ? 100 : (result.score ?? 0)} />
               </div>
 
               {result.insufficientData && (
@@ -425,7 +429,9 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
                   </div>
                   <Badge
                     variant={
-                      item.token.score === null
+                      item.token.isGraduated
+                        ? "success"
+                        : item.token.score === null
                         ? "warning"
                         : item.token.score >= 61
                           ? "success"
@@ -434,7 +440,7 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
                             : "danger"
                     }
                   >
-                    {item.token.score === null ? "Unknown" : `${item.token.score}%`}
+                    {item.token.isGraduated ? "Graduated" : item.token.score === null ? "Unknown" : `${item.token.score}%`}
                   </Badge>
                 </div>
 

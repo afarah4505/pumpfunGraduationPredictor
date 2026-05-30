@@ -25,9 +25,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const fromEmail = env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+    
     const resendUrl = "https://api.resend.com/emails";
     const emailPayload = {
-      from: "onboarding@resend.dev",
+      from: fromEmail,
       to: "leefarah45@gmail.com",
       subject: "New PumpIQ Feedback Submission",
       html: `
@@ -40,6 +42,7 @@ export async function POST(request: Request) {
     };
 
     console.log("[Feedback] Sending email to Resend", {
+      from: emailPayload.from,
       to: emailPayload.to,
       subject: emailPayload.subject,
     });

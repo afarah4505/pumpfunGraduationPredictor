@@ -1,5 +1,6 @@
 type PumpfunCoin = {
   mint?: string;
+  complete?: boolean;
   name?: string;
   symbol?: string;
   usd_market_cap?: number;

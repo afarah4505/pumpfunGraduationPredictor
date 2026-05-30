@@ -1,5 +1,6 @@
 import { calculateGraduationScore, estimateTimeToGraduation, getGraduationCategory } from "@/lib/scoring";
 import { fetchRealTokenMetrics } from "@/lib/analysis-providers";
+import { fetchPumpfunCoin } from "@/lib/pumpfun";
 import type { RealMetricKey, TokenAnalysis, TokenMetricsInput, UnifiedTokenData } from "@/lib/types";
 
 const REQUIRED_DISPLAY_METRICS: RealMetricKey[] = [
@@ -131,7 +132,11 @@ function buildDerivedGrowthTrends(metrics: Awaited<ReturnType<typeof fetchRealTo
 
 export async function buildTokenAnalysis(address: string): Promise<TokenAnalysis> {
   const normalizedAddress = address.trim();
-  const metrics = await fetchRealTokenMetrics(normalizedAddress);
+  const [metrics, pumpfunCoin] = await Promise.all([
+    fetchRealTokenMetrics(normalizedAddress),
+    fetchPumpfunCoin(normalizedAddress),
+  ]);
+  const isGraduated = pumpfunCoin?.complete === true;
   const missingMetrics = getMissingMetricsBundle(metrics);
   const scoreInput = buildScoreInput(metrics);
   const availability = getAvailabilityCount(metrics);
@@ -169,6 +174,7 @@ export async function buildTokenAnalysis(address: string): Promise<TokenAnalysis
 
   return {
     address: normalizedAddress,
+    isGraduated,
     name: metrics.tokenName,
     symbol: metrics.symbol,
     marketCap: metrics.marketCap,
