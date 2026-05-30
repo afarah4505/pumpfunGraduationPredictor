@@ -1,0 +1,24 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PumpIQ X profile logo">
+  <defs>
+    <linearGradient id="bg" x1="40" y1="20" x2="360" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#08101f"/>
+      <stop offset="1" stop-color="#111d34"/>
+    </linearGradient>
+    <filter id="glow" x="0" y="0" width="400" height="400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="400" height="400" rx="88" fill="url(#bg)"/>
+
+  <rect x="80" y="80" width="240" height="240" rx="72" fill="#0b1222" stroke="#30415f" stroke-width="10"/>
+
+  <g filter="url(#glow)">
+    <path d="M136 246L175 207L201 233L260 174" stroke="#2CF5A0" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="260" cy="174" r="18" fill="#2CF5A0"/>
+  </g>
+</svg>
