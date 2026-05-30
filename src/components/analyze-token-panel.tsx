@@ -111,6 +111,46 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
     try {
       const parsed = JSON.parse(raw) as WatchlistItem[];
       setWatchlist(parsed);
+
+      const needsGraduationBackfill = parsed.some((item) => item.token.isGraduated === undefined);
+      if (!needsGraduationBackfill) {
+        return;
+      }
+
+      void (async () => {
+        const updates = await Promise.all(
+          parsed.map(async (item) => {
+            if (item.token.isGraduated !== undefined) {
+              return item;
+            }
+
+            try {
+              const response = await fetch(`/api/token/${item.token.address}`);
+              if (!response.ok) {
+                return item;
+              }
+
+              const json = await response.json() as { data?: TokenAnalysis };
+              if (!json.data) {
+                return item;
+              }
+
+              return {
+                ...item,
+                token: {
+                  ...item.token,
+                  score: json.data.score,
+                  isGraduated: json.data.isGraduated,
+                },
+              };
+            } catch {
+              return item;
+            }
+          }),
+        );
+
+        setWatchlist(updates);
+      })();
     } catch {
       setWatchlist([]);
     }

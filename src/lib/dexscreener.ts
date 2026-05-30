@@ -1,5 +1,6 @@
 type DexPair = {
   chainId?: string;
+  dexId?: string;
   marketCap?: number;
   fdv?: number;
   liquidity?: {

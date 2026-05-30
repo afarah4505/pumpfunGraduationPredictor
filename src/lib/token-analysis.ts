@@ -1,5 +1,6 @@
 import { calculateGraduationScore, estimateTimeToGraduation, getGraduationCategory } from "@/lib/scoring";
 import { fetchRealTokenMetrics } from "@/lib/analysis-providers";
+import { fetchPrimarySolanaPair } from "@/lib/dexscreener";
 import { fetchPumpfunCoin } from "@/lib/pumpfun";
 import type { RealMetricKey, TokenAnalysis, TokenMetricsInput, UnifiedTokenData } from "@/lib/types";
 
@@ -132,11 +133,14 @@ function buildDerivedGrowthTrends(metrics: Awaited<ReturnType<typeof fetchRealTo
 
 export async function buildTokenAnalysis(address: string): Promise<TokenAnalysis> {
   const normalizedAddress = address.trim();
-  const [metrics, pumpfunCoin] = await Promise.all([
+  const [metrics, pumpfunCoin, primaryDexPair] = await Promise.all([
     fetchRealTokenMetrics(normalizedAddress),
     fetchPumpfunCoin(normalizedAddress),
+    fetchPrimarySolanaPair(normalizedAddress),
   ]);
-  const isGraduated = pumpfunCoin?.complete === true;
+  const isRaydiumPair = (primaryDexPair?.dexId ?? "").toLowerCase().includes("raydium");
+  const hasPumpfunRaydiumPool = typeof pumpfunCoin?.raydium_pool === "string" && pumpfunCoin.raydium_pool.length > 0;
+  const isGraduated = pumpfunCoin?.complete === true || hasPumpfunRaydiumPool || isRaydiumPair;
   const missingMetrics = getMissingMetricsBundle(metrics);
   const scoreInput = buildScoreInput(metrics);
   const availability = getAvailabilityCount(metrics);

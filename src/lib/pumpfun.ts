@@ -1,6 +1,7 @@
 type PumpfunCoin = {
   mint?: string;
   complete?: boolean;
+  raydium_pool?: string | null;
   name?: string;
   symbol?: string;
   usd_market_cap?: number;
