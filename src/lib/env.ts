@@ -9,6 +9,7 @@ const serverEnvSchema = z.object({
   SOLANA_TRACKER_API_KEY: z.string().min(1).optional(),
   HELIUS_RPC_URL: z.string().url().optional(),
   SOLANA_RPC_URL: z.string().url().optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
 });
 
 const defaultEnv = {
@@ -34,6 +35,7 @@ export function getServerEnv() {
     SOLANA_TRACKER_API_KEY: process.env.SOLANA_TRACKER_API_KEY,
     HELIUS_RPC_URL: process.env.HELIUS_RPC_URL,
     SOLANA_RPC_URL: process.env.SOLANA_RPC_URL ?? defaultEnv.SOLANA_RPC_URL,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
   });
 
   cachedServerEnv = parsed;
