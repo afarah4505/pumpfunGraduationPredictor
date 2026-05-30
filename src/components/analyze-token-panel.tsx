@@ -96,6 +96,7 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [warningDetails, setWarningDetails] = useState<string[]>([]);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>(initialWatchlist);
   const [watchlistBusy, setWatchlistBusy] = useState(false);
   const hasAutoAnalyzed = useRef(false);
@@ -147,6 +148,7 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
     setLoading(true);
     setError(null);
     setWarning(null);
+    setWarningDetails([]);
 
     try {
       console.info("[ui:analyze] request", {
@@ -179,10 +181,12 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
 
       setResult(json.data);
       setWarning(json.warning ?? null);
+      setWarningDetails(json.details ?? []);
     } catch (analysisError) {
       setResult(null);
       setError(analysisError instanceof Error ? analysisError.message : "Analysis failed");
       setWarning(null);
+      setWarningDetails([]);
     } finally {
       setLoading(false);
     }
@@ -267,7 +271,18 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
 
         {error && <p className="rounded-lg border border-danger/20 bg-danger/10 p-3 text-sm text-danger">{error}</p>}
 
-        {warning && <p className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">{warning}</p>}
+        {warning && (
+          <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+            <p>{warning}</p>
+            {warningDetails.length > 0 && (
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-warning/90">
+                {warningDetails.slice(0, 5).map((detail) => (
+                  <li key={detail}>{detail}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {loading && (
           <div className="space-y-3">
