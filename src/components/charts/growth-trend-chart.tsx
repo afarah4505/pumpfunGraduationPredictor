@@ -8,12 +8,12 @@ type GrowthTrendChartProps = {
 
 export function GrowthTrendChart({ data }: GrowthTrendChartProps) {
   if (data.length === 0) {
-    return <div className="flex h-72 items-center justify-center rounded-lg border border-border/70 text-sm text-muted">Real growth trend data is unavailable for this token.</div>;
+    return <div className="flex h-56 w-full items-center justify-center rounded-lg border border-border/70 text-xs sm:text-sm text-muted sm:h-72">Real growth trend data is unavailable for this token.</div>;
   }
 
   return (
-    <div className="h-72 w-full">
-      <ResponsiveContainer>
+    <div className="h-56 w-full overflow-x-auto sm:h-72">
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
           <XAxis dataKey="day" stroke="var(--chart-axis)" tickLine={false} axisLine={false} />

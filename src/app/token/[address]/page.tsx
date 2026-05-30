@@ -22,9 +22,9 @@ export default async function TokenDetailPage({ params }: TokenPageProps) {
   const token = await buildTokenAnalysis(address);
 
   return (
-    <div className="space-y-6 page-enter">
-      <div className="glass rounded-3xl border border-border/70 p-5 sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="w-full overflow-x-hidden space-y-6 page-enter">
+      <div className="glass rounded-3xl border border-border/70 p-4 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-primary">Token Intelligence</p>
             <h1 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">
