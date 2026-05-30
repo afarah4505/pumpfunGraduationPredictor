@@ -7,6 +7,7 @@ export type TrendingOpportunity = {
   symbol: string;
   score: number;
   confidence: ConfidenceLevel;
+  createdAt: string;
 };
 
 type DbTokenRow = {
@@ -15,6 +16,7 @@ type DbTokenRow = {
   symbol: string;
   score: number;
   confidence: ConfidenceLevel;
+  created_at: string;
 };
 
 export async function upsertAnalyzedToken(data: TokenAnalysis) {
@@ -59,10 +61,11 @@ export async function fetchTrendingOpportunitiesFromDb(): Promise<TrendingOpport
 
   const { data, error } = await supabase
     .from("tokens")
-    .select("address, name, symbol, score, confidence")
+    .select("address, name, symbol, score, confidence, created_at")
     .gte("score", 60)
     .in("confidence", ["Medium", "High"])
     .order("score", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(100);
 
   if (error) {
@@ -76,32 +79,6 @@ export async function fetchTrendingOpportunitiesFromDb(): Promise<TrendingOpport
     symbol: row.symbol,
     score: row.score,
     confidence: row.confidence,
-  }));
-}
-
-export async function fetchRecentAnalyzedTokensFromDb(limit = 25): Promise<TrendingOpportunity[]> {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    console.warn("[supabase:tokens] SUPABASE_SERVICE_ROLE_KEY missing; recent token read returns empty");
-    return [];
-  }
-
-  const { data, error } = await supabase
-    .from("tokens")
-    .select("address, name, symbol, score, confidence")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error("[supabase:tokens] failed recent token read", { error: error.message });
-    return [];
-  }
-
-  return ((data ?? []) as DbTokenRow[]).map((row) => ({
-    address: row.address,
-    name: row.name,
-    symbol: row.symbol,
-    score: row.score,
-    confidence: row.confidence,
+    createdAt: row.created_at,
   }));
 }

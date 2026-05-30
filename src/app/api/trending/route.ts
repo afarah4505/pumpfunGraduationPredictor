@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchRecentAnalyzedTokensFromDb, fetchTrendingOpportunitiesFromDb } from "@/lib/supabase/tokens";
+import { fetchTrendingOpportunitiesFromDb } from "@/lib/supabase/tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -20,13 +20,28 @@ function toConviction(score: number): Conviction {
 }
 
 export async function GET() {
-  const strictRows = await fetchTrendingOpportunitiesFromDb();
-  const rows = strictRows.length > 0 ? strictRows : await fetchRecentAnalyzedTokensFromDb();
-  const source = strictRows.length > 0 ? "strict" : "recent-fallback";
+  const rows = await fetchTrendingOpportunitiesFromDb();
 
   const ranked: RankedOpportunity[] = rows
-    .filter((token) => source === "recent-fallback" || token.score >= 60)
-    .sort((a, b) => b.score - a.score)
+    .filter((token) => token.score >= 60 && (token.confidence === "Medium" || token.confidence === "High"))
+    .sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+
+      const confidenceRank = {
+        High: 3,
+        Medium: 2,
+        Low: 1,
+      } as const;
+
+      const confidenceDiff = confidenceRank[b.confidence] - confidenceRank[a.confidence];
+      if (confidenceDiff !== 0) {
+        return confidenceDiff;
+      }
+
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    })
     .map((token, index) => {
       const rankedToken: RankedOpportunity = {
         rank: index + 1,
@@ -42,6 +57,7 @@ export async function GET() {
         token: `${rankedToken.symbol} (${rankedToken.address})`,
         score: rankedToken.score,
         confidence: rankedToken.confidence,
+        sourceTable: "public.tokens",
         rankingPosition: rankedToken.rank,
       });
 
@@ -51,7 +67,7 @@ export async function GET() {
   return NextResponse.json(
     {
       data: ranked,
-      source,
+      source: "public.tokens",
       generatedAt: new Date().toISOString(),
     },
     {
