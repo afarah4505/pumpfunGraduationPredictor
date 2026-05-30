@@ -11,6 +11,16 @@ export function ScoreHistoryChart({ data }: ScoreHistoryChartProps) {
     return <div className="flex h-48 w-full items-center justify-center rounded-lg border border-border/70 text-xs sm:text-sm text-muted sm:h-64">Real score history is unavailable for this token.</div>;
   }
 
+  if (data.length === 1) {
+    return (
+      <div className="flex h-48 w-full flex-col items-center justify-center rounded-lg border border-border/70 bg-background-panel text-sm text-muted sm:h-64">
+        <p>Current observed score</p>
+        <p className="mt-1 text-2xl font-semibold text-foreground">{data[0].score}%</p>
+        <p className="mt-1 text-xs text-muted">Historical score points are not available yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-48 w-full overflow-x-auto sm:h-64">
       <ResponsiveContainer width="100%" height="100%">

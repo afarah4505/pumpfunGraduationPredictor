@@ -95,18 +95,13 @@ function getAvailabilityCount(metrics: Awaited<ReturnType<typeof fetchRealTokenM
   };
 }
 
-function clampScore(value: number) {
-  return Math.max(0, Math.min(100, Math.round(value)));
-}
-
-function buildDerivedScoreHistory(baseScore: number) {
-  const offsets = [-8, -5, -3, -1, 0];
-  const labels = ["-4h", "-3h", "-2h", "-1h", "Now"];
-
-  return labels.map((timestamp, index) => ({
-    timestamp,
-    score: clampScore(baseScore + offsets[index]),
-  }));
+function buildObservedScoreHistory(currentScore: number) {
+  return [
+    {
+      timestamp: "Now",
+      score: Math.round(Math.max(0, Math.min(100, currentScore))),
+    },
+  ];
 }
 
 function buildDerivedGrowthTrends(metrics: Awaited<ReturnType<typeof fetchRealTokenMetrics>>) {
@@ -174,7 +169,7 @@ export async function buildTokenAnalysis(address: string): Promise<TokenAnalysis
     },
   };
 
-  const scoreHistory = hasAnyMeaningfulData ? buildDerivedScoreHistory(scoreResult.score) : [];
+  const scoreHistory = hasAnyMeaningfulData ? buildObservedScoreHistory(scoreResult.score) : [];
   const growthTrends = hasAnyMeaningfulData ? buildDerivedGrowthTrends(metrics) : [];
 
   return {
