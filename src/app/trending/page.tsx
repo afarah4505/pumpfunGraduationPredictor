@@ -40,7 +40,14 @@ export default function TrendingPage() {
     return items.filter((item) => !item.isGraduated && (item.score ?? Number.NEGATIVE_INFINITY) >= parsedMin);
   }, [items, minScore]);
 
-  const topThree = filtered.slice(0, 3);
+  const fallbackItems = useMemo(() => {
+    return items.filter((item) => !item.isGraduated);
+  }, [items]);
+
+  const hasThresholdMiss = filtered.length === 0 && fallbackItems.length > 0;
+  const displayed = hasThresholdMiss ? fallbackItems : filtered;
+
+  const topThree = displayed.slice(0, 3);
 
   return (
     <div className="space-y-6 page-enter">
@@ -79,10 +86,15 @@ export default function TrendingPage() {
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-16 w-full" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : displayed.length === 0 ? (
           <p className="rounded-xl border border-border/80 bg-background-panel p-4 text-sm text-muted">No tokens match this filter.</p>
         ) : (
           <div className="space-y-4">
+            {hasThresholdMiss && (
+              <p className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+                No tokens currently meet the minimum score. Showing best available non-graduated opportunities.
+              </p>
+            )}
             {topThree.length > 0 && (
               <div className="grid gap-3 md:grid-cols-3">
                 {topThree.map((token, index) => (
@@ -117,7 +129,7 @@ export default function TrendingPage() {
             )}
 
             <div className="space-y-2">
-              {filtered.map((token) => (
+              {displayed.map((token) => (
                 <div key={token.address} className="rounded-xl border border-border/80 bg-background-panel p-3 transition hover:bg-background-soft/80">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
