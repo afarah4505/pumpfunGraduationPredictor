@@ -30,7 +30,7 @@ export default async function TokenDetailPage({ params }: TokenPageProps) {
             <h1 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">
               {token.name ?? "Unknown Token"} <span className="text-muted">({token.symbol ?? "Unknown"})</span>
             </h1>
-            <p className="mt-1 text-sm text-muted">{token.address}</p>
+            <p className="mt-1 max-w-full break-all text-sm text-muted">{token.address}</p>
             <p className="mt-2 text-xs uppercase tracking-wide text-muted">Data source: {token.dataSource}</p>
             <p className="mt-1 text-xs uppercase tracking-wide text-muted">Data completeness: {token.dataCompletenessPercentage}%</p>
           </div>
@@ -123,7 +123,7 @@ export default async function TokenDetailPage({ params }: TokenPageProps) {
         <p>Holder Count: {token.holderCount === null ? "Unknown" : token.holderCount.toLocaleString()}</p>
         <p>Unique Wallets: {token.uniqueWalletCount === null ? "Unknown" : token.uniqueWalletCount.toLocaleString()}</p>
         <p>Volume: {token.volume === null ? "Unknown" : `$${token.volume.toLocaleString()}`}</p>
-        <p>Address: {token.address}</p>
+        <p className="break-all">Address: {token.address}</p>
       </Card>
 
       {token.missingMetrics.length > 0 && (
