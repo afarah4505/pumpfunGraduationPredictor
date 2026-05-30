@@ -325,7 +325,7 @@ export function AnalyzeTokenPanel({ initialWatchlist, initialAddress = "" }: Ana
                   >
                     {result.confidence ?? "Unavailable"} Confidence
                   </Badge>
-                  <ScoreRing score={result.score} className="scale-[0.8] origin-top-right" />
+                  <ScoreRing score={result.score} isGraduated={result.isGraduated} className="scale-[0.8] origin-top-right" />
                 </div>
               </div>
 

@@ -34,7 +34,7 @@ export default async function TokenDetailPage({ params }: TokenPageProps) {
             <p className="mt-2 text-xs uppercase tracking-wide text-muted">Data source: {token.dataSource}</p>
             <p className="mt-1 text-xs uppercase tracking-wide text-muted">Data completeness: {token.dataCompletenessPercentage}%</p>
           </div>
-          <ScoreRing score={token.score} />
+          <ScoreRing score={token.score} isGraduated={token.isGraduated} />
         </div>
       </div>
 
