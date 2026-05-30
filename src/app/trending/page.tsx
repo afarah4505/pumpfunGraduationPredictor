@@ -15,18 +15,20 @@ type TrendingOpportunity = {
   name: string;
   symbol: string;
   score: number;
-  confidence: "Medium" | "High";
+  confidence: "Low" | "Medium" | "High";
   conviction: Conviction;
 };
 
 type TrendingResponse = {
   data: TrendingOpportunity[];
+  source?: "strict" | "recent-fallback";
   generatedAt?: string;
 };
 
 export default function TrendingPage() {
   const [items, setItems] = useState<TrendingOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState<"strict" | "recent-fallback">("strict");
 
   useEffect(() => {
     let active = true;
@@ -43,6 +45,7 @@ export default function TrendingPage() {
         }
 
         setItems(json.data ?? []);
+        setSource(json.source ?? "strict");
       } finally {
         if (active) {
           setLoading(false);
@@ -69,7 +72,11 @@ export default function TrendingPage() {
       <div>
         <p className="text-xs uppercase tracking-[0.18em] text-primary">Live Leaderboard</p>
         <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">Trending Opportunities</h1>
-        <p className="mt-1 text-sm text-muted">Strictly ranked by graduation probability score, highest to lowest.</p>
+        <p className="mt-1 text-sm text-muted">
+          {source === "strict"
+            ? "Strictly ranked by graduation probability score, highest to lowest."
+            : "Showing recent analyzed tokens while strict high-conviction rankings are still populating."}
+        </p>
       </div>
 
       <Card className="space-y-6 border border-border/80 bg-background-soft/70 p-4 sm:p-5">
@@ -80,9 +87,15 @@ export default function TrendingPage() {
             <Skeleton className="h-16 w-full" />
           </div>
         ) : items.length === 0 ? (
-          <p className="rounded-xl border border-border/80 bg-background-panel p-4 text-sm text-muted">
-            No high-conviction opportunities found at this time.
-          </p>
+          <div className="rounded-xl border border-border/80 bg-background-panel p-4 text-sm text-muted">
+            <p>No trending tokens found yet.</p>
+            <p className="mt-2">Local setup checklist:</p>
+            <ol className="mt-1 list-decimal space-y-1 pl-5">
+              <li>Run SQL from <code>supabase/schema.sql</code> in your Supabase project.</li>
+              <li>Ensure <code>SUPABASE_SERVICE_ROLE_KEY</code> is set in <code>.env.local</code>.</li>
+              <li>Analyze at least one token from the home page to populate the tokens table.</li>
+            </ol>
+          </div>
         ) : (
           <>
             <section className="space-y-2">
@@ -102,7 +115,9 @@ export default function TrendingPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="success">{token.score}%</Badge>
-                          <Badge variant="success">{token.confidence} Confidence</Badge>
+                          <Badge variant={token.confidence === "High" ? "success" : token.confidence === "Medium" ? "warning" : "default"}>
+                            {token.confidence} Confidence
+                          </Badge>
                           <Link href={`/token/${token.address}`} className="inline-flex text-primary hover:underline">
                             View
                             <ArrowUpRight className="ml-1 h-4 w-4" />
@@ -132,7 +147,9 @@ export default function TrendingPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="warning">{token.score}%</Badge>
-                          <Badge variant="warning">{token.confidence} Confidence</Badge>
+                          <Badge variant={token.confidence === "High" ? "success" : token.confidence === "Medium" ? "warning" : "default"}>
+                            {token.confidence} Confidence
+                          </Badge>
                           <Link href={`/token/${token.address}`} className="inline-flex text-primary hover:underline">
                             View
                             <ArrowUpRight className="ml-1 h-4 w-4" />

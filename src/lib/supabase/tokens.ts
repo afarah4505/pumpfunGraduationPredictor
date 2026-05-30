@@ -78,3 +78,30 @@ export async function fetchTrendingOpportunitiesFromDb(): Promise<TrendingOpport
     confidence: row.confidence,
   }));
 }
+
+export async function fetchRecentAnalyzedTokensFromDb(limit = 25): Promise<TrendingOpportunity[]> {
+  const supabase = createServerSupabaseClient();
+  if (!supabase) {
+    console.warn("[supabase:tokens] SUPABASE_SERVICE_ROLE_KEY missing; recent token read returns empty");
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("tokens")
+    .select("address, name, symbol, score, confidence")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("[supabase:tokens] failed recent token read", { error: error.message });
+    return [];
+  }
+
+  return ((data ?? []) as DbTokenRow[]).map((row) => ({
+    address: row.address,
+    name: row.name,
+    symbol: row.symbol,
+    score: row.score,
+    confidence: row.confidence,
+  }));
+}

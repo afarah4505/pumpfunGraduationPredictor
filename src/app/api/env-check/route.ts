@@ -14,6 +14,7 @@ export async function GET() {
     SOLANA_TRACKER_API_KEY: process.env.SOLANA_TRACKER_API_KEY,
     HELIUS_RPC_URL: process.env.HELIUS_RPC_URL,
     SOLANA_RPC_URL: process.env.SOLANA_RPC_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   };
 
   return NextResponse.json({

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchTrendingOpportunitiesFromDb } from "@/lib/supabase/tokens";
+import { fetchRecentAnalyzedTokensFromDb, fetchTrendingOpportunitiesFromDb } from "@/lib/supabase/tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +20,12 @@ function toConviction(score: number): Conviction {
 }
 
 export async function GET() {
-  const rows = await fetchTrendingOpportunitiesFromDb();
+  const strictRows = await fetchTrendingOpportunitiesFromDb();
+  const rows = strictRows.length > 0 ? strictRows : await fetchRecentAnalyzedTokensFromDb();
+  const source = strictRows.length > 0 ? "strict" : "recent-fallback";
 
   const ranked: RankedOpportunity[] = rows
-    .filter((token) => token.score >= 60)
+    .filter((token) => source === "recent-fallback" || token.score >= 60)
     .sort((a, b) => b.score - a.score)
     .map((token, index) => {
       const rankedToken: RankedOpportunity = {
@@ -49,6 +51,7 @@ export async function GET() {
   return NextResponse.json(
     {
       data: ranked,
+      source,
       generatedAt: new Date().toISOString(),
     },
     {
