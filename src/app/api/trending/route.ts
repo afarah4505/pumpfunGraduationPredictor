@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { fetchTrendingAddresses } from "@/lib/dexscreener";
+import { fetchPrimarySolanaPair, fetchTrendingAddresses } from "@/lib/dexscreener";
 import { buildTokenAnalysis } from "@/lib/token-analysis";
 import type { TokenAnalysis, TrendingSortBy } from "@/lib/types";
 
@@ -28,13 +28,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid sort option" }, { status: 400 });
   }
 
-  const liveAddresses = await fetchTrendingAddresses(10);
+  const liveAddresses = await fetchTrendingAddresses(30);
 
   if (liveAddresses.length === 0) {
     return NextResponse.json({ data: [], message: "No live trending tokens available right now" });
   }
 
-  const data = await Promise.all(liveAddresses.map((address) => buildTokenAnalysis(address)));
+  const primaryPairs = await Promise.all(liveAddresses.map((address) => fetchPrimarySolanaPair(address)));
+  const pumpfunPreferred = liveAddresses.filter((_, index) => {
+    const dexId = (primaryPairs[index]?.dexId ?? "").toLowerCase();
+    return dexId === "pumpfun";
+  });
+
+  const targetAddresses = (pumpfunPreferred.length > 0 ? pumpfunPreferred : liveAddresses).slice(0, 12);
+
+  const data = await Promise.all(targetAddresses.map((address) => buildTokenAnalysis(address)));
 
   return NextResponse.json({ data: sortTokens(data, parsed.data.sortBy) });
 }
