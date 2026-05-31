@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { fetchTrendingOpportunitiesFromDb } from "@/lib/supabase/tokens";
+import { discoverRecentPumpfunTokenAddresses } from "@/lib/token-discovery";
+import { buildTokenAnalysis } from "@/lib/token-analysis";
 
 export const dynamic = "force-dynamic";
+
+const SCORE_THRESHOLD = 65;
+const DISCOVERY_LIMIT = 30;
+const DISPLAY_LIMIT = 20;
 
 type Conviction = "High Conviction" | "Medium Conviction";
 
@@ -20,54 +25,91 @@ function toConviction(score: number): Conviction {
 }
 
 export async function GET() {
-  const rows = await fetchTrendingOpportunitiesFromDb();
+  const discovery = await discoverRecentPumpfunTokenAddresses(DISCOVERY_LIMIT);
+  const discoveredAddresses = discovery.addresses;
 
-  const ranked: RankedOpportunity[] = rows
-    .filter((token) => token.score >= 60 && (token.confidence === "Medium" || token.confidence === "High"))
-    .sort((a, b) => {
-      if (b.score !== a.score) {
-        return b.score - a.score;
-      }
+  console.info("[api:trending] tokens-fetched", {
+    count: discoveredAddresses.length,
+    addresses: discoveredAddresses,
+    sources: discovery.details,
+  });
 
-      const confidenceRank = {
-        High: 3,
-        Medium: 2,
-        Low: 1,
-      } as const;
-
-      const confidenceDiff = confidenceRank[b.confidence] - confidenceRank[a.confidence];
-      if (confidenceDiff !== 0) {
-        return confidenceDiff;
-      }
-
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    })
-    .map((token, index) => {
-      const rankedToken: RankedOpportunity = {
-        rank: index + 1,
-        address: token.address,
-        name: token.name,
-        symbol: token.symbol,
-        score: token.score,
-        confidence: token.confidence,
-        conviction: toConviction(token.score),
-      };
-
-      console.info("[api:trending] rank", {
-        token: `${rankedToken.symbol} (${rankedToken.address})`,
-        score: rankedToken.score,
-        confidence: rankedToken.confidence,
-        sourceTable: "public.tokens",
-        rankingPosition: rankedToken.rank,
-      });
-
-      return rankedToken;
+  if (discoveredAddresses.length === 0) {
+    console.warn("[api:trending] discovery-empty", {
+      message: "No new tokens discovered yet.",
+      sources: discovery.details,
     });
+
+    return NextResponse.json(
+      {
+        data: [],
+        source: "live-api",
+        discoveryCount: 0,
+        discoveryDetails: discovery.details,
+        emptyReason: "No new tokens discovered yet.",
+        generatedAt: new Date().toISOString(),
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+        },
+      },
+    );
+  }
+
+  const analyzedResults = await Promise.allSettled(
+    discoveredAddresses.map(async (address) => buildTokenAnalysis(address)),
+  );
+
+  const analyzedTokens = analyzedResults
+    .filter((result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof buildTokenAnalysis>>> => result.status === "fulfilled")
+    .map((result) => result.value)
+    .filter((value): value is Awaited<ReturnType<typeof buildTokenAnalysis>> => value !== null);
+
+  console.info("[api:trending] tokens-analyzed", {
+    discoveredCount: discoveredAddresses.length,
+    analyzedCount: analyzedTokens.length,
+  });
+
+  console.info(
+    "[api:trending] scores-generated",
+    analyzedTokens.map((token) => ({
+      token: `${token.symbol ?? "UNKNOWN"} (${token.address})`,
+      score: token.score,
+      confidence: token.confidence,
+    })),
+  );
+
+  const ranked: RankedOpportunity[] = analyzedTokens
+    .filter((token) => token.score !== null && token.score >= SCORE_THRESHOLD)
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    .slice(0, DISPLAY_LIMIT)
+    .map((token, index) => ({
+      rank: index + 1,
+      address: token.address,
+      name: token.name ?? "Unknown Token",
+      symbol: token.symbol ?? "UNKNOWN",
+      score: token.score ?? 0,
+      confidence: token.confidence ?? "Low",
+      conviction: toConviction(token.score ?? 0),
+    }));
+
+  console.info("[api:trending] tokens-displayed", {
+    count: ranked.length,
+    tokens: ranked.map((token) => ({
+      token: `${token.symbol} (${token.address})`,
+      score: token.score,
+      confidence: token.confidence,
+      sourceTable: "live-api",
+    })),
+  });
 
   return NextResponse.json(
     {
       data: ranked,
-      source: "public.tokens",
+      source: "live-api",
+      discoveryCount: discoveredAddresses.length,
+      discoveryDetails: discovery.details,
       generatedAt: new Date().toISOString(),
     },
     {

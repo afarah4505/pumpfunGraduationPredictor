@@ -21,13 +21,17 @@ type TrendingOpportunity = {
 
 type TrendingResponse = {
   data: TrendingOpportunity[];
-  source?: "public.tokens";
+  source?: "live-api";
+  discoveryCount?: number;
+  emptyReason?: string;
   generatedAt?: string;
 };
 
 export default function TrendingPage() {
   const [items, setItems] = useState<TrendingOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [discoveryCount, setDiscoveryCount] = useState<number | null>(null);
+  const [emptyReason, setEmptyReason] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -44,6 +48,8 @@ export default function TrendingPage() {
         }
 
         setItems(json.data ?? []);
+        setDiscoveryCount(json.discoveryCount ?? null);
+        setEmptyReason(json.emptyReason ?? null);
       } finally {
         if (active) {
           setLoading(false);
@@ -62,15 +68,14 @@ export default function TrendingPage() {
     };
   }, []);
 
-  const highConviction = useMemo(() => items.filter((item) => item.conviction === "High Conviction"), [items]);
-  const mediumConviction = useMemo(() => items.filter((item) => item.conviction === "Medium Conviction"), [items]);
+  const displayedItems = useMemo(() => items, [items]);
 
   return (
     <div className="space-y-6 page-enter">
       <div>
         <p className="text-xs uppercase tracking-[0.18em] text-primary">Live Leaderboard</p>
         <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">Trending Opportunities</h1>
-        <p className="mt-1 text-sm text-muted">Strictly ranked by graduation probability score, highest to lowest.</p>
+        <p className="mt-1 text-sm text-muted">Live discovery and real-time scoring of recently launched Pump.fun tokens.</p>
       </div>
 
       <Card className="space-y-6 border border-border/80 bg-background-soft/70 p-4 sm:p-5">
@@ -82,74 +87,38 @@ export default function TrendingPage() {
           </div>
         ) : items.length === 0 ? (
           <p className="rounded-xl border border-border/80 bg-background-panel p-4 text-sm text-muted">
-            No high-conviction opportunities found.
+            {discoveryCount === 0 || emptyReason === "No new tokens discovered yet."
+              ? "No new tokens discovered yet."
+              : "No high-conviction opportunities found."}
           </p>
         ) : (
-          <>
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-primary">High Conviction</h2>
-              {highConviction.length === 0 ? (
-                <p className="rounded-xl border border-border/70 bg-background-panel p-3 text-sm text-muted">No high-conviction tokens currently ranked.</p>
-              ) : (
-                <div className="space-y-2">
-                  {highConviction.map((token) => (
-                    <div key={token.address} className="rounded-xl border border-border/80 bg-background-panel p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            #{token.rank} {token.name} <span className="text-muted">({token.symbol})</span>
-                          </p>
-                          <p className="text-xs text-muted">{token.address}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="success">{token.score}%</Badge>
-                          <Badge variant={token.confidence === "High" ? "success" : token.confidence === "Medium" ? "warning" : "default"}>
-                            {token.confidence} Confidence
-                          </Badge>
-                          <Link href={`/token/${token.address}`} className="inline-flex text-primary hover:underline">
-                            View
-                            <ArrowUpRight className="ml-1 h-4 w-4" />
-                          </Link>
-                        </div>
-                      </div>
+          <section className="space-y-2">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-primary">Top Opportunities</h2>
+            <div className="space-y-2">
+              {displayedItems.map((token) => (
+                <div key={token.address} className="rounded-xl border border-border/80 bg-background-panel p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        #{token.rank} {token.name} <span className="text-muted">({token.symbol})</span>
+                      </p>
+                      <p className="text-xs text-muted">{token.address}</p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-warning">Medium Conviction</h2>
-              {mediumConviction.length === 0 ? (
-                <p className="rounded-xl border border-border/70 bg-background-panel p-3 text-sm text-muted">No medium-conviction tokens currently ranked.</p>
-              ) : (
-                <div className="space-y-2">
-                  {mediumConviction.map((token) => (
-                    <div key={token.address} className="rounded-xl border border-border/80 bg-background-panel p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            #{token.rank} {token.name} <span className="text-muted">({token.symbol})</span>
-                          </p>
-                          <p className="text-xs text-muted">{token.address}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="warning">{token.score}%</Badge>
-                          <Badge variant={token.confidence === "High" ? "success" : token.confidence === "Medium" ? "warning" : "default"}>
-                            {token.confidence} Confidence
-                          </Badge>
-                          <Link href={`/token/${token.address}`} className="inline-flex text-primary hover:underline">
-                            View
-                            <ArrowUpRight className="ml-1 h-4 w-4" />
-                          </Link>
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="success">{token.score}%</Badge>
+                      <Badge variant={token.confidence === "High" ? "success" : token.confidence === "Medium" ? "warning" : "default"}>
+                        {token.confidence} Confidence
+                      </Badge>
+                      <Link href={`/token/${token.address}`} className="inline-flex text-primary hover:underline">
+                        View
+                        <ArrowUpRight className="ml-1 h-4 w-4" />
+                      </Link>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
-            </section>
-          </>
+              ))}
+            </div>
+          </section>
         )}
       </Card>
     </div>
