@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 const SCORE_THRESHOLD = 65;
 const DISCOVERY_LIMIT = 30;
 const DISPLAY_LIMIT = 20;
+const EXCLUDED_MINTS = new Set(["So11111111111111111111111111111111111111112"]);
 
 type Conviction = "High Conviction" | "Medium Conviction";
 
@@ -81,6 +82,7 @@ export async function GET() {
   );
 
   const ranked: RankedOpportunity[] = analyzedTokens
+    .filter((token) => !EXCLUDED_MINTS.has(token.address))
     .filter((token) => token.score !== null && token.score >= SCORE_THRESHOLD)
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
     .slice(0, DISPLAY_LIMIT)
